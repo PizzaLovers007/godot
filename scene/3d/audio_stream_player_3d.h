@@ -39,6 +39,7 @@ class Area3D;
 struct AudioFrame;
 class AudioStream;
 class AudioStreamPlayback;
+class AudioStreamPlaybackScheduled;
 class AudioStreamPlayerInternal;
 class VelocityTracker3D;
 
@@ -96,6 +97,8 @@ private:
 	Area3D *_get_overriding_area();
 #endif // PHYSICS_3D_DISABLED
 	Vector<AudioFrame> _update_panning();
+
+	void _play_internal(Ref<AudioStreamPlayback> stream_playback, double p_from_pos = 0.0);
 
 	uint32_t area_mask = 1;
 
@@ -155,6 +158,7 @@ public:
 	float get_pitch_scale() const;
 
 	void play(float p_from_pos = 0.0);
+	Ref<AudioStreamPlaybackScheduled> play_scheduled(double p_abs_time, double p_from_pos = 0.0);
 	void seek(float p_seconds);
 	void stop();
 	bool is_playing() const;

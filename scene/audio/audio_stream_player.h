@@ -36,6 +36,7 @@
 struct AudioFrame;
 class AudioStream;
 class AudioStreamPlayback;
+class AudioStreamPlaybackScheduled;
 class AudioStreamPlayerInternal;
 
 class AudioStreamPlayer : public Node {
@@ -57,6 +58,8 @@ private:
 	bool _is_active() const;
 
 	Vector<AudioFrame> _get_volume_vector();
+
+	void _play_internal(Ref<AudioStreamPlayback> stream_playback, double p_from_pos = 0.0);
 
 protected:
 	void _validate_property(PropertyInfo &p_property) const;
@@ -89,6 +92,7 @@ public:
 	int get_max_polyphony() const;
 
 	void play(float p_from_pos = 0.0);
+	Ref<AudioStreamPlaybackScheduled> play_scheduled(double p_abs_time, double p_from_pos = 0.0);
 	void seek(float p_seconds);
 	void stop();
 	bool is_playing() const;

@@ -35,6 +35,7 @@
 #include "scene/2d/audio_listener_2d.h"
 #include "scene/audio/audio_stream_player_internal.h"
 #include "scene/main/viewport.h"
+#include "scene/resources/audio_stream_playback_scheduled.h"
 #include "scene/resources/world_2d.h"
 #include "servers/audio/audio_stream.h"
 #include "servers/audio_server.h"
@@ -231,11 +232,7 @@ float AudioStreamPlayer2D::get_pitch_scale() const {
 	return internal->pitch_scale;
 }
 
-void AudioStreamPlayer2D::play(float p_from_pos) {
-	Ref<AudioStreamPlayback> stream_playback = internal->play_basic();
-	if (stream_playback.is_null()) {
-		return;
-	}
+void AudioStreamPlayer2D::_play_internal(Ref<AudioStreamPlayback> stream_playback, double p_from_pos) {
 	setplayback = stream_playback;
 	setplay.set(p_from_pos);
 
@@ -247,6 +244,25 @@ void AudioStreamPlayer2D::play(float p_from_pos) {
 
 		AudioServer::get_singleton()->start_sample_playback(sample_playback);
 	}
+}
+
+void AudioStreamPlayer2D::play(float p_from_pos) {
+	Ref<AudioStreamPlayback> stream_playback = internal->play_basic();
+	if (stream_playback.is_null()) {
+		return;
+	}
+	_play_internal(stream_playback, p_from_pos);
+}
+
+Ref<AudioStreamPlaybackScheduled> AudioStreamPlayer2D::play_scheduled(double p_abs_time, double p_from_pos) {
+	Ref<AudioStreamPlaybackScheduled> stream_playback_scheduled = internal->play_scheduled_basic();
+	if (stream_playback_scheduled.is_null()) {
+		return stream_playback_scheduled;
+	}
+	stream_playback_scheduled->set_scheduled_start_time(p_abs_time);
+	_play_internal(stream_playback_scheduled, p_from_pos);
+
+	return stream_playback_scheduled;
 }
 
 void AudioStreamPlayer2D::seek(float p_seconds) {
@@ -388,6 +404,7 @@ void AudioStreamPlayer2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_pitch_scale"), &AudioStreamPlayer2D::get_pitch_scale);
 
 	ClassDB::bind_method(D_METHOD("play", "from_position"), &AudioStreamPlayer2D::play, DEFVAL(0.0));
+	ClassDB::bind_method(D_METHOD("play_scheduled", "absolute_time", "from_position"), &AudioStreamPlayer2D::play_scheduled, DEFVAL(0.0));
 	ClassDB::bind_method(D_METHOD("seek", "to_position"), &AudioStreamPlayer2D::seek);
 	ClassDB::bind_method(D_METHOD("stop"), &AudioStreamPlayer2D::stop);
 

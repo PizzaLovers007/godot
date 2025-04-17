@@ -37,6 +37,7 @@
 #include "scene/3d/velocity_tracker_3d.h"
 #include "scene/audio/audio_stream_player_internal.h"
 #include "scene/main/viewport.h"
+#include "scene/resources/audio_stream_playback_scheduled.h"
 #include "servers/audio/audio_stream.h"
 
 #ifndef PHYSICS_3D_DISABLED
@@ -591,11 +592,7 @@ float AudioStreamPlayer3D::get_pitch_scale() const {
 	return internal->pitch_scale;
 }
 
-void AudioStreamPlayer3D::play(float p_from_pos) {
-	Ref<AudioStreamPlayback> stream_playback = internal->play_basic();
-	if (stream_playback.is_null()) {
-		return;
-	}
+void AudioStreamPlayer3D::_play_internal(Ref<AudioStreamPlayback> stream_playback, double p_from_pos) {
 	setplayback = stream_playback;
 	setplay.set(p_from_pos);
 
@@ -607,6 +604,25 @@ void AudioStreamPlayer3D::play(float p_from_pos) {
 
 		AudioServer::get_singleton()->start_sample_playback(sample_playback);
 	}
+}
+
+void AudioStreamPlayer3D::play(float p_from_pos) {
+	Ref<AudioStreamPlayback> stream_playback = internal->play_basic();
+	if (stream_playback.is_null()) {
+		return;
+	}
+	_play_internal(stream_playback, p_from_pos);
+}
+
+Ref<AudioStreamPlaybackScheduled> AudioStreamPlayer3D::play_scheduled(double p_abs_time, double p_from_pos) {
+	Ref<AudioStreamPlaybackScheduled> stream_playback_scheduled = internal->play_scheduled_basic();
+	if (stream_playback_scheduled.is_null()) {
+		return stream_playback_scheduled;
+	}
+	stream_playback_scheduled->set_scheduled_start_time(p_abs_time);
+	_play_internal(stream_playback_scheduled, p_from_pos);
+
+	return stream_playback_scheduled;
 }
 
 void AudioStreamPlayer3D::seek(float p_seconds) {
@@ -822,6 +838,7 @@ void AudioStreamPlayer3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_pitch_scale"), &AudioStreamPlayer3D::get_pitch_scale);
 
 	ClassDB::bind_method(D_METHOD("play", "from_position"), &AudioStreamPlayer3D::play, DEFVAL(0.0));
+	ClassDB::bind_method(D_METHOD("play_scheduled", "absolute_time", "from_position"), &AudioStreamPlayer3D::play_scheduled, DEFVAL(0.0));
 	ClassDB::bind_method(D_METHOD("seek", "to_position"), &AudioStreamPlayer3D::seek);
 	ClassDB::bind_method(D_METHOD("stop"), &AudioStreamPlayer3D::stop);
 
